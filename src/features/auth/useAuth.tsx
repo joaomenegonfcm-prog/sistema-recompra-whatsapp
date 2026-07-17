@@ -23,6 +23,14 @@ type AuthProviderProps = {
   children: ReactNode;
 };
 
+function getAuthCallbackUrl() {
+  if (typeof window === 'undefined') {
+    return undefined;
+  }
+
+  return `${window.location.origin}/auth/callback`;
+}
+
 export function AuthProvider({ children }: AuthProviderProps) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(Boolean(supabase));
@@ -73,7 +81,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       },
       signUp: async (email, password) => {
         if (!supabase) throw new Error(supabaseConfigurationError ?? 'Supabase não configurado.');
-        return supabase.auth.signUp({ email, password });
+        return supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: getAuthCallbackUrl(),
+          },
+        });
       },
       signOut: async () => {
         if (!supabase) return;
