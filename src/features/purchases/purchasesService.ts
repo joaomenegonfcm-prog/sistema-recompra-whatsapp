@@ -146,6 +146,38 @@ function isUuid(value: unknown): value is string {
   );
 }
 
+function extractStatusHistoryId(data: unknown): string | null {
+  if (isUuid(data)) {
+    return data;
+  }
+
+  if (Array.isArray(data)) {
+    return extractStatusHistoryId(data[0]);
+  }
+
+  if (!isRecord(data)) {
+    return null;
+  }
+
+  const candidateKeys = [
+    'status_history_id',
+    'history_id',
+    'status_change_id',
+    'change_purchase_status',
+    'id',
+  ];
+
+  for (const key of candidateKeys) {
+    const value = data[key];
+
+    if (isUuid(value)) {
+      return value;
+    }
+  }
+
+  return null;
+}
+
 function normalizeMetadata(metadata: unknown): PurchaseStatusHistoryMetadata | null {
   if (!isRecord(metadata)) {
     return null;
@@ -229,13 +261,15 @@ export async function changePurchaseStatus(input: ChangePurchaseStatusInput): Pr
     );
   }
 
-  if (!isUuid(data)) {
+  const statusHistoryId = extractStatusHistoryId(data);
+
+  if (!statusHistoryId) {
     throw new PurchaseStatusError(
       'A alteração foi processada, mas o identificador do histórico retornado é inválido.',
     );
   }
 
-  return data;
+  return statusHistoryId;
 }
 
 export async function getPurchaseStatusHistoryByPurchaseIds(

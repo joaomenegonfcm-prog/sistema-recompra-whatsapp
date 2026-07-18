@@ -16,6 +16,7 @@ import {
   formatPhone,
   formatPurchaseStatus,
 } from '../../lib/formatters';
+import { countValidRepurchases, isMetricPurchaseValid } from '../../lib/repurchase';
 import { isValidContactAttempt, type PurchaseStatus } from '../../types/purchase';
 import {
   changePurchaseStatus,
@@ -267,13 +268,17 @@ export function CustomerHistoryPage() {
       }));
   }, [customer]);
 
-  const summary = useMemo(() => ({
-    total: purchases.length,
-    active: purchases.filter((purchase) => purchase.status === 'active').length,
-    inFollowup: purchases.filter((purchase) => purchase.status === 'in_followup').length,
-    repurchased: purchases.filter((purchase) => purchase.status === 'repurchased').length,
-    paused: purchases.filter((purchase) => purchase.status === 'paused').length,
-  }), [purchases]);
+  const summary = useMemo(() => {
+    const validMetricPurchases = purchases.filter(isMetricPurchaseValid);
+
+    return {
+      total: validMetricPurchases.length,
+      active: validMetricPurchases.filter((purchase) => purchase.status === 'active').length,
+      inFollowup: validMetricPurchases.filter((purchase) => purchase.status === 'in_followup').length,
+      repurchased: countValidRepurchases(purchases),
+      paused: validMetricPurchases.filter((purchase) => purchase.status === 'paused').length,
+    };
+  }, [purchases]);
 
   function closeModal() {
     if (saving) return;

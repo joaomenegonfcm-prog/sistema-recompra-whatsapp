@@ -1,4 +1,6 @@
 import { supabase, supabaseConfigurationError } from '../../lib/supabase';
+import { countValidRepurchasesByCustomer } from '../../lib/repurchase';
+import type { PurchaseStatus } from '../../types/purchase';
 
 export type DashboardSummary = {
   todayContacts: number;
@@ -12,6 +14,11 @@ type CountQuery = PromiseLike<{
   count: number | null;
   error: { message: string } | null;
 }>;
+
+type RepurchaseMetricRow = {
+  customer_id: string | null;
+  status: PurchaseStatus;
+};
 
 function getSupabaseClient() {
   if (!supabase) {
@@ -37,7 +44,13 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
   firstDayOfMonth.setDate(1);
   firstDayOfMonth.setHours(0, 0, 0, 0);
 
-  const [todayContacts, inFollowup, repurchased, paused, attemptsThisMonth] = await Promise.all([
+  const [
+    todayContacts,
+    inFollowup,
+    validPurchasesForRepurchaseMetrics,
+    paused,
+    attemptsThisMonth,
+  ] = await Promise.all([
     getCount(
       client.from('today_contacts').select('*', { count: 'exact', head: true }),
     ),
@@ -47,12 +60,10 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
         .select('*', { count: 'exact', head: true })
         .eq('status', 'in_followup'),
     ),
-    getCount(
-      client
-        .from('purchases')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'repurchased'),
-    ),
+    client
+      .from('purchases')
+      .select('customer_id, status')
+      .neq('status', 'cancelled'),
     getCount(
       client
         .from('purchases')
@@ -67,10 +78,16 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
     ),
   ]);
 
+  if (validPurchasesForRepurchaseMetrics.error) {
+    throw new Error(validPurchasesForRepurchaseMetrics.error.message);
+  }
+
   return {
     todayContacts,
     inFollowup,
-    repurchased,
+    repurchased: countValidRepurchasesByCustomer(
+      (validPurchasesForRepurchaseMetrics.data ?? []) as RepurchaseMetricRow[],
+    ),
     paused,
     attemptsThisMonth,
   };

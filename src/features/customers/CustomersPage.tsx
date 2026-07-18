@@ -5,14 +5,21 @@ import { Button } from '../../components/UI/Button';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { Loading } from '../../components/UI/Loading';
 import { formatDate, formatPhone, normalizePhone } from '../../lib/formatters';
+import { countValidRepurchases, isMetricPurchaseValid } from '../../lib/repurchase';
 import { listCustomers, type CustomerListItem } from './customersService';
 
 function countPurchasesByStatus(customer: CustomerListItem, status: string): number {
-  return customer.purchases.filter((purchase) => purchase.status === status).length;
+  return customer.purchases.filter(
+    (purchase) => isMetricPurchaseValid(purchase) && purchase.status === status,
+  ).length;
+}
+
+function getValidPurchases(customer: CustomerListItem) {
+  return customer.purchases.filter(isMetricPurchaseValid);
 }
 
 function getLatestPurchase(customer: CustomerListItem) {
-  return customer.purchases.reduce<CustomerListItem['purchases'][number] | null>(
+  return getValidPurchases(customer).reduce<CustomerListItem['purchases'][number] | null>(
     (latest, purchase) => {
       if (!latest) return purchase;
 
@@ -178,10 +185,10 @@ export function CustomersPage() {
                 <tr key={customer.id}>
                   <td><strong>{customer.name}</strong></td>
                   <td className="table-nowrap">{formatPhone(customer.phone)}</td>
-                  <td>{customer.purchases.length}</td>
+                  <td>{getValidPurchases(customer).length}</td>
                   <td>{countPurchasesByStatus(customer, 'active')}</td>
                   <td>{countPurchasesByStatus(customer, 'in_followup')}</td>
-                  <td>{countPurchasesByStatus(customer, 'repurchased')}</td>
+                  <td>{countValidRepurchases(customer.purchases)}</td>
                   <td className="table-nowrap">{formatDate(getLastPurchaseDate(customer))}</td>
                   <td>
                     <Link className="table-action-link" to={`/clientes/${customer.id}`}>

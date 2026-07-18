@@ -27,6 +27,38 @@ export function shouldPauseAfterAttempt(attemptNumber: number) {
   return attemptNumber >= 3;
 }
 
+type MetricPurchase = {
+  status: PurchaseStatus;
+};
+
+type CustomerMetricPurchase = MetricPurchase & {
+  customer_id: string | null;
+};
+
+export function isMetricPurchaseValid(purchase: MetricPurchase) {
+  return purchase.status !== 'cancelled';
+}
+
+export function countValidRepurchases(purchases: MetricPurchase[]) {
+  const validPurchases = purchases.filter(isMetricPurchaseValid);
+
+  return Math.max(validPurchases.length - 1, 0);
+}
+
+export function countValidRepurchasesByCustomer(purchases: CustomerMetricPurchase[]) {
+  const purchasesByCustomer = purchases
+    .filter((purchase) => purchase.customer_id && isMetricPurchaseValid(purchase))
+    .reduce<Record<string, number>>((grouped, purchase) => {
+      grouped[purchase.customer_id as string] = (grouped[purchase.customer_id as string] ?? 0) + 1;
+      return grouped;
+    }, {});
+
+  return Object.values(purchasesByCustomer).reduce(
+    (total, purchasesCount) => total + Math.max(purchasesCount - 1, 0),
+    0,
+  );
+}
+
 export function isPurchaseDueForContact(purchase: PurchaseDueCheck, referenceDate = new Date()) {
   if (!['active', 'in_followup'].includes(purchase.status)) {
     return false;
