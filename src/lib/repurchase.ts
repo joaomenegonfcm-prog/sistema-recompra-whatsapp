@@ -1,5 +1,5 @@
 import { addDays, isAfter, parseISO } from 'date-fns';
-import type { Purchase, PurchaseStatus } from '../types/purchase';
+import type { PurchaseDueCheck, PurchaseStatus } from '../types/purchase';
 
 export const statusLabels: Record<PurchaseStatus, string> = {
   active: 'Ativo',
@@ -27,13 +27,13 @@ export function shouldPauseAfterAttempt(attemptNumber: number) {
   return attemptNumber >= 3;
 }
 
-export function isPurchaseDueForContact(purchase: Purchase, referenceDate = new Date()) {
+export function isPurchaseDueForContact(purchase: PurchaseDueCheck, referenceDate = new Date()) {
   if (!['active', 'in_followup'].includes(purchase.status)) {
     return false;
   }
 
-  const nextAttempt = Math.min(purchase.attempt_count + 1, 3);
-  const nextAttemptDate = getAttemptDate(purchase.repurchase_date, nextAttempt);
+  const nextAttempt = Math.min(purchase.attempts_count + 1, 3);
+  const nextAttemptDate = getAttemptDate(purchase.reorder_date, nextAttempt);
 
   return !isAfter(nextAttemptDate, referenceDate);
 }
