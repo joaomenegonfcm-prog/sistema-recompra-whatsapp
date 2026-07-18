@@ -139,45 +139,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function isUuid(value: unknown): value is string {
-  return (
-    typeof value === 'string' &&
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i.test(value)
-  );
-}
-
-function extractStatusHistoryId(data: unknown): string | null {
-  if (isUuid(data)) {
-    return data;
-  }
-
-  if (Array.isArray(data)) {
-    return extractStatusHistoryId(data[0]);
-  }
-
-  if (!isRecord(data)) {
-    return null;
-  }
-
-  const candidateKeys = [
-    'status_history_id',
-    'history_id',
-    'status_change_id',
-    'change_purchase_status',
-    'id',
-  ];
-
-  for (const key of candidateKeys) {
-    const value = data[key];
-
-    if (isUuid(value)) {
-      return value;
-    }
-  }
-
-  return null;
-}
-
 function normalizeMetadata(metadata: unknown): PurchaseStatusHistoryMetadata | null {
   if (!isRecord(metadata)) {
     return null;
@@ -239,7 +200,7 @@ export async function createPurchase(input: CreatePurchaseInput) {
   return data;
 }
 
-export async function changePurchaseStatus(input: ChangePurchaseStatusInput): Promise<string> {
+export async function changePurchaseStatus(input: ChangePurchaseStatusInput): Promise<void> {
   const reason = input.reason.trim();
   const attemptHandling = input.attemptHandling ?? 'keep';
 
@@ -247,7 +208,7 @@ export async function changePurchaseStatus(input: ChangePurchaseStatusInput): Pr
     throw new PurchaseStatusError('Motivo é obrigatório');
   }
 
-  const { data, error } = await getSupabaseClient().rpc('change_purchase_status', {
+  const { error } = await getSupabaseClient().rpc('change_purchase_status', {
     p_purchase_id: input.purchaseId,
     p_new_status: input.newStatus,
     p_reason: reason,
@@ -260,16 +221,6 @@ export async function changePurchaseStatus(input: ChangePurchaseStatusInput): Pr
       getErrorCode(error),
     );
   }
-
-  const statusHistoryId = extractStatusHistoryId(data);
-
-  if (!statusHistoryId) {
-    throw new PurchaseStatusError(
-      'A alteração foi processada, mas o identificador do histórico retornado é inválido.',
-    );
-  }
-
-  return statusHistoryId;
 }
 
 export async function getPurchaseStatusHistoryByPurchaseIds(
