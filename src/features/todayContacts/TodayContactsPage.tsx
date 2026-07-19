@@ -67,6 +67,11 @@ export function TodayContactsPage() {
   }
 
   function handleOpenWhatsApp(contact: TodayContact) {
+    if (contact.customer_opt_out) {
+      setError('Cliente marcado como não contatar.');
+      return;
+    }
+
     const message = getContactMessage(contact);
     if (!message) return;
 
@@ -75,6 +80,11 @@ export function TodayContactsPage() {
   }
 
   async function handleRegisterAttempt(contact: TodayContact) {
+    if (contact.customer_opt_out) {
+      setError('Cliente marcado como não contatar.');
+      return;
+    }
+
     const message = getContactMessage(contact);
     if (!message) return;
 

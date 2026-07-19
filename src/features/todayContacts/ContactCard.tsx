@@ -64,7 +64,12 @@ export function ContactCard({
       </dl>
 
       <div className="contact-card-actions">
-        <Button type="button" onClick={() => onOpenWhatsApp(contact)} disabled={isProcessing}>
+        <Button
+          type="button"
+          onClick={() => onOpenWhatsApp(contact)}
+          disabled={isProcessing || contact.customer_opt_out}
+          title={contact.customer_opt_out ? 'Cliente marcado como não contatar.' : undefined}
+        >
           <MessageCircle size={18} aria-hidden="true" />
           Abrir WhatsApp
         </Button>
@@ -72,7 +77,7 @@ export function ContactCard({
           type="button"
           variant="secondary"
           onClick={() => onRegisterAttempt(contact)}
-          disabled={isProcessing || contact.next_attempt_number === null}
+          disabled={isProcessing || contact.next_attempt_number === null || contact.customer_opt_out}
         >
           <Check size={18} aria-hidden="true" />
           Marcar como enviado
@@ -91,6 +96,9 @@ export function ContactCard({
           Pausar
         </Button>
       </div>
+      {contact.customer_opt_out && (
+        <p className="contact-opt-out-note">Cliente marcado como não contatar.</p>
+      )}
     </Card>
   );
 }

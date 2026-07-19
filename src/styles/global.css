@@ -340,6 +340,11 @@ p {
   color: #963a30;
 }
 
+.badge-opt_out {
+  background: #f7e3df;
+  color: #8b2e24;
+}
+
 .empty-state {
   border: 1px dashed #b8c5bc;
   border-radius: 8px;
@@ -793,6 +798,13 @@ p {
   font-size: 0.88rem;
 }
 
+.contact-opt-out-note {
+  margin-bottom: 0;
+  color: #8b2e24;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
 .success-message {
   border: 1px solid #a8d0b5;
   border-radius: 8px;
@@ -1013,6 +1025,18 @@ p {
   min-width: 1080px;
 }
 
+.customer-name-cell,
+.customer-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.customer-title-row h1 {
+  margin-bottom: 0;
+}
+
 .table-action-link {
   display: inline-flex;
   align-items: center;
@@ -1059,6 +1083,37 @@ p {
   justify-items: end;
   gap: 14px;
   width: min(420px, 100%);
+}
+
+.opt-out-notice {
+  display: grid;
+  gap: 8px;
+  border: 1px solid #e3b8b3;
+  border-radius: 8px;
+  background: #fff5f3;
+  color: #8b2e24;
+  padding: 14px 16px;
+}
+
+.opt-out-notice span {
+  color: #5b403d;
+}
+
+.opt-out-notice dl {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+}
+
+.opt-out-notice dt {
+  color: #8b2e24;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.opt-out-notice dd {
+  margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .customer-history-header dt,

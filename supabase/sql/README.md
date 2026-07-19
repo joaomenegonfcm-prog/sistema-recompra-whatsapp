@@ -8,11 +8,14 @@ Execute os arquivos abaixo, nesta ordem, no SQL Editor do Supabase:
 4. `04_views.sql`
 5. `06_purchase_status_history.sql`
 6. `07_fix_purchase_status_permissions.sql`
-7. `05_daily_summary_cron.sql` somente depois de publicar a Edge Function `send-daily-summary`
+7. `08_customer_opt_out.sql`
+8. `05_daily_summary_cron.sql` somente depois de publicar a Edge Function `send-daily-summary`
 
 Os scripts preparam os tipos, tabelas, índices, gatilhos, políticas de segurança, funções RPC, a view `today_contacts` e o agendamento opcional do resumo diário por e-mail.
 
 Na V2.0, execute `06_purchase_status_history.sql` para criar a base de auditoria e alteração segura de status. Em seguida, execute `07_fix_purchase_status_permissions.sql` para reforçar as permissões finais da tabela de histórico e da RPC `change_purchase_status`.
+
+Na V2.2, execute `08_customer_opt_out.sql` para adicionar opt-out por cliente, criar a RPC `set_customer_opt_out` e atualizar a view `today_contacts` para excluir clientes marcados como não contatar.
 
 ## Checklist manual
 

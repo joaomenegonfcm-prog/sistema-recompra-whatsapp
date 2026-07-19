@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { addDays, format } from 'date-fns';
-import { ArrowLeft, History, Pencil, Plus, Save } from 'lucide-react';
+import { ArrowLeft, Ban, History, Pencil, Plus, Save } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { Badge, type BadgeVariant } from '../../components/UI/Badge';
 import { Button } from '../../components/UI/Button';
@@ -29,6 +29,7 @@ import {
 } from '../purchases/purchasesService';
 import {
   getCustomerHistory,
+  setCustomerOptOut,
   updateCustomer,
   type CustomerHistory,
 } from './customersService';
@@ -46,6 +47,7 @@ type ModalState =
   | { type: 'customer' }
   | { type: 'purchase'; purchase: Purchase }
   | { type: 'status'; purchase: Purchase }
+  | { type: 'optOut'; optOut: boolean }
   | null;
 
 type CustomerFormState = {
@@ -167,6 +169,7 @@ export function CustomerHistoryPage() {
   const [customerForm, setCustomerForm] = useState<CustomerFormState>(emptyCustomerForm);
   const [purchaseForm, setPurchaseForm] = useState<PurchaseFormState>(emptyPurchaseForm);
   const [statusForm, setStatusForm] = useState<StatusFormState>(emptyStatusForm);
+  const [optOutReason, setOptOutReason] = useState('');
 
   useEffect(() => {
     hasCustomerRef.current = customer !== null;
@@ -189,6 +192,7 @@ export function CustomerHistoryPage() {
         setSuccessMessage(null);
         setModal(null);
         setModalError(null);
+        setOptOutReason('');
       }
 
       try {
@@ -330,6 +334,13 @@ export function CustomerHistoryPage() {
     setModal({ type: 'status', purchase });
   }
 
+  function openOptOutModal(optOut: boolean) {
+    setOptOutReason('');
+    setModalError(null);
+    setSuccessMessage(null);
+    setModal({ type: 'optOut', optOut });
+  }
+
   async function handleCustomerSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -438,6 +449,37 @@ export function CustomerHistoryPage() {
     }
   }
 
+  async function handleOptOutSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!customer || !modal || modal.type !== 'optOut') return;
+
+    if (!optOutReason.trim()) {
+      setModalError('Informe o motivo.');
+      return;
+    }
+
+    setModalError(null);
+    setSaving(true);
+
+    try {
+      await setCustomerOptOut(customer.id, modal.optOut, optOutReason);
+      refreshAfterSuccess(
+        modal.optOut
+          ? 'Cliente marcado como não contatar.'
+          : 'Cliente liberado para contato novamente.',
+      );
+    } catch (caughtError) {
+      if (import.meta.env.DEV) {
+        console.error('Erro ao atualizar opt-out do cliente:', caughtError);
+      }
+
+      setModalError(getErrorMessage(caughtError, 'Não foi possível atualizar o opt-out do cliente.'));
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <section className="page-section">
       <div className="customer-history-actions">
@@ -490,7 +532,10 @@ export function CustomerHistoryPage() {
           <header className="customer-history-header">
             <div>
               <p className="eyebrow">Histórico do cliente</p>
-              <h1>{customer.name}</h1>
+              <div className="customer-title-row">
+                <h1>{customer.name}</h1>
+                {customer.opt_out && <Badge variant="opt_out">Não contatar</Badge>}
+              </div>
               <p>{formatPhone(customer.phone)}</p>
             </div>
             <div className="customer-history-details">
@@ -502,8 +547,37 @@ export function CustomerHistoryPage() {
                 <Pencil size={16} aria-hidden="true" />
                 Editar cliente
               </Button>
+              <Button
+                type="button"
+                variant={customer.opt_out ? 'secondary' : 'ghost'}
+                onClick={() => openOptOutModal(!customer.opt_out)}
+                disabled={refreshing}
+              >
+                <Ban size={16} aria-hidden="true" />
+                {customer.opt_out ? 'Permitir contato' : 'Não contatar'}
+              </Button>
             </div>
           </header>
+
+          {customer.opt_out && (
+            <div className="opt-out-notice" role="status">
+              <strong>Este cliente marcou que não deseja receber contato.</strong>
+              <span>
+                Ele não aparecerá em Contatos de Hoje e ações de WhatsApp ficam bloqueadas.
+              </span>
+              <dl>
+                {customer.opt_out_at && (
+                  <div><dt>Marcado em</dt><dd>{formatDateTime(customer.opt_out_at)}</dd></div>
+                )}
+                {customer.opt_out_updated_at && (
+                  <div><dt>Última atualização</dt><dd>{formatDateTime(customer.opt_out_updated_at)}</dd></div>
+                )}
+                {customer.opt_out_reason && (
+                  <div><dt>Motivo</dt><dd>{customer.opt_out_reason}</dd></div>
+                )}
+              </dl>
+            </div>
+          )}
 
           <div className="customer-summary-grid">
             <Card><span>Total de compras</span><strong>{summary.total}</strong></Card>
@@ -871,6 +945,46 @@ export function CustomerHistoryPage() {
               >
                 <Save size={16} aria-hidden="true" />
                 {saving ? 'Salvando...' : 'Salvar status'}
+              </Button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
+      <Modal
+        isOpen={modal?.type === 'optOut'}
+        title={modal?.type === 'optOut' && modal.optOut
+          ? 'Marcar cliente como não contatar'
+          : 'Permitir contato novamente'}
+        onClose={closeModal}
+        preventClose={saving}
+      >
+        {modal?.type === 'optOut' && (
+          <form className="modal-form" onSubmit={handleOptOutSubmit} noValidate>
+            <p className="form-help">
+              {modal.optOut
+                ? 'Este cliente deixará de aparecer em Contatos de Hoje e as ações de WhatsApp serão bloqueadas.'
+                : 'Este cliente poderá voltar a aparecer em Contatos de Hoje se houver compras vencidas.'}
+            </p>
+            <label className="field" htmlFor="opt-out-reason">
+              <span>Motivo</span>
+              <textarea
+                id="opt-out-reason"
+                className="textarea"
+                value={optOutReason}
+                onChange={(event) => setOptOutReason(event.target.value)}
+                required
+              />
+            </label>
+            {modalError && <div className="form-message form-message-error" role="alert">{modalError}</div>}
+            <div className="form-actions">
+              <Button type="submit" disabled={saving}>
+                <Save size={16} aria-hidden="true" />
+                {saving
+                  ? 'Salvando...'
+                  : modal.optOut
+                    ? 'Confirmar opt-out'
+                    : 'Remover opt-out'}
               </Button>
             </div>
           </form>

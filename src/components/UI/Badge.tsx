@@ -7,7 +7,8 @@ export type BadgeVariant =
   | 'in_followup'
   | 'repurchased'
   | 'paused'
-  | 'cancelled';
+  | 'cancelled'
+  | 'opt_out';
 
 type BadgeProps = HTMLAttributes<HTMLSpanElement> & {
   children: ReactNode;

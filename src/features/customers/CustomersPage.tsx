@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { FileUp, History, Plus, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Badge } from '../../components/UI/Badge';
 import { Button } from '../../components/UI/Button';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { Loading } from '../../components/UI/Loading';
@@ -183,7 +184,12 @@ export function CustomersPage() {
             <tbody>
               {filteredCustomers.map((customer) => (
                 <tr key={customer.id}>
-                  <td><strong>{customer.name}</strong></td>
+                  <td>
+                    <div className="customer-name-cell">
+                      <strong>{customer.name}</strong>
+                      {customer.opt_out && <Badge variant="opt_out">Não contatar</Badge>}
+                    </div>
+                  </td>
                   <td className="table-nowrap">{formatPhone(customer.phone)}</td>
                   <td>{getValidPurchases(customer).length}</td>
                   <td>{countPurchasesByStatus(customer, 'active')}</td>

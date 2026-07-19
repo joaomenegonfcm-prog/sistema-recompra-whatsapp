@@ -7,6 +7,10 @@ export type CustomerListItem = {
   name: string;
   phone: string;
   notes: string | null;
+  opt_out: boolean;
+  opt_out_at: string | null;
+  opt_out_reason: string | null;
+  opt_out_updated_at: string | null;
   created_at: string;
   purchases: {
     id: string;
@@ -22,6 +26,10 @@ export type CustomerHistory = {
   name: string;
   phone: string;
   notes: string | null;
+  opt_out: boolean;
+  opt_out_at: string | null;
+  opt_out_reason: string | null;
+  opt_out_updated_at: string | null;
   created_at: string;
   purchases: {
     id: string;
@@ -41,8 +49,20 @@ export type UpdatedCustomer = {
   name: string;
   phone: string;
   notes: string | null;
+  opt_out: boolean;
+  opt_out_at: string | null;
+  opt_out_reason: string | null;
+  opt_out_updated_at: string | null;
   created_at: string;
   updated_at: string;
+};
+
+export type CustomerOptOutState = {
+  customer_id: string;
+  opt_out: boolean;
+  opt_out_at: string | null;
+  opt_out_reason: string | null;
+  opt_out_updated_at: string | null;
 };
 
 export interface UpdateCustomerInput {
@@ -67,6 +87,10 @@ export async function listCustomers(): Promise<CustomerListItem[]> {
       name,
       phone,
       notes,
+      opt_out,
+      opt_out_at,
+      opt_out_reason,
+      opt_out_updated_at,
       created_at,
       purchases (
         id,
@@ -98,6 +122,10 @@ export async function getCustomerHistory(customerId: string): Promise<CustomerHi
       name,
       phone,
       notes,
+      opt_out,
+      opt_out_at,
+      opt_out_reason,
+      opt_out_updated_at,
       created_at,
       purchases (
         id,
@@ -162,7 +190,7 @@ export async function updateCustomer(input: UpdateCustomerInput): Promise<Update
     .from('customers')
     .update({ name, phone, updated_at: updatedAt })
     .eq('id', input.customerId)
-    .select('id, name, phone, notes, created_at, updated_at')
+    .select('id, name, phone, notes, opt_out, opt_out_at, opt_out_reason, opt_out_updated_at, created_at, updated_at')
     .single();
 
   if (error) {
@@ -174,4 +202,34 @@ export async function updateCustomer(input: UpdateCustomerInput): Promise<Update
   }
 
   return data as UpdatedCustomer;
+}
+
+export async function setCustomerOptOut(
+  customerId: string,
+  optOut: boolean,
+  reason: string,
+): Promise<CustomerOptOutState> {
+  const trimmedReason = reason.trim();
+
+  if (!trimmedReason) {
+    throw new Error('Informe o motivo.');
+  }
+
+  const { data, error } = await getSupabaseClient().rpc('set_customer_opt_out', {
+    p_customer_id: customerId,
+    p_opt_out: optOut,
+    p_reason: trimmedReason,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  const updatedState = Array.isArray(data) ? data[0] : data;
+
+  if (!updatedState) {
+    throw new Error('Não foi possível confirmar a alteração de opt-out.');
+  }
+
+  return updatedState as CustomerOptOutState;
 }

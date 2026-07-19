@@ -5,6 +5,7 @@ export type TodayContact = {
   customer_id: string;
   customer_name: string;
   phone: string;
+  customer_opt_out: boolean;
   product: string;
   purchase_date: string;
   reorder_date: string;
@@ -42,7 +43,7 @@ export async function listTodayContacts() {
     throw error;
   }
 
-  return (data ?? []) as TodayContact[];
+  return ((data ?? []) as TodayContact[]).filter((contact) => !contact.customer_opt_out);
 }
 
 export async function getSettings() {

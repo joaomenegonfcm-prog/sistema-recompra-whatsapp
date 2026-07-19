@@ -18,6 +18,11 @@ export type Database = {
           name: string;
           phone: string;
           notes: string | null;
+          opt_out: boolean;
+          opt_out_at: string | null;
+          opt_out_reason: string | null;
+          opt_out_updated_at: string | null;
+          opt_out_updated_by: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -27,6 +32,11 @@ export type Database = {
           name: string;
           phone: string;
           notes?: string | null;
+          opt_out?: boolean;
+          opt_out_at?: string | null;
+          opt_out_reason?: string | null;
+          opt_out_updated_at?: string | null;
+          opt_out_updated_by?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -36,6 +46,11 @@ export type Database = {
           name?: string;
           phone?: string;
           notes?: string | null;
+          opt_out?: boolean;
+          opt_out_at?: string | null;
+          opt_out_reason?: string | null;
+          opt_out_updated_at?: string | null;
+          opt_out_updated_by?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -245,6 +260,7 @@ export type Database = {
           customer_id: string;
           customer_name: string;
           phone: string;
+          customer_opt_out: boolean;
           product: string;
           purchase_date: string;
           reorder_date: string;
@@ -298,6 +314,20 @@ export type Database = {
           p_attempt_handling?: PurchaseAttemptHandling;
         };
         Returns: string;
+      };
+      set_customer_opt_out: {
+        Args: {
+          p_customer_id: string;
+          p_opt_out: boolean;
+          p_reason: string;
+        };
+        Returns: {
+          customer_id: string;
+          opt_out: boolean;
+          opt_out_at: string | null;
+          opt_out_reason: string | null;
+          opt_out_updated_at: string | null;
+        }[];
       };
     };
     Enums: {
