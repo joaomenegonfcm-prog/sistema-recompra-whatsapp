@@ -84,7 +84,7 @@ Não alterar essas regras como efeito colateral de refatoração, melhoria visua
 
 Os scripts SQL incrementais ficam em `supabase/sql/`.
 
-Enquanto o README raiz estiver defasado, use `supabase/sql/README.md` como fonte de referência para a ordem de execução dos scripts SQL.
+Use `supabase/sql/README.md` como fonte de referência para a ordem de execução dos scripts SQL e mantenha as instruções resumidas do README raiz alinhadas a ela.
 
 Ao fazer uma alteração de banco:
 

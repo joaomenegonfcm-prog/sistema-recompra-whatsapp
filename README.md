@@ -31,13 +31,16 @@ MVP web para lojistas cadastrarem compras, acompanharem ciclos de recompra e abr
 
    Use somente a chave pública `anon`. Nunca coloque uma chave `service_role` no front-end.
 
-3. No SQL Editor do Supabase, execute os arquivos nesta ordem:
+3. No SQL Editor do Supabase, execute os arquivos na ordem documentada em `supabase/sql/README.md`:
 
    1. `supabase/sql/01_schema.sql`
    2. `supabase/sql/02_rls_policies.sql`
    3. `supabase/sql/03_functions.sql`
    4. `supabase/sql/04_views.sql`
-   5. `supabase/sql/05_daily_summary_cron.sql` somente depois de publicar a Edge Function de resumo diário
+   5. `supabase/sql/06_purchase_status_history.sql`
+   6. `supabase/sql/07_fix_purchase_status_permissions.sql`
+   7. `supabase/sql/08_customer_opt_out.sql`
+   8. `supabase/sql/05_daily_summary_cron.sql` somente depois de publicar a Edge Function de resumo diário
 
 4. Inicie o ambiente local:
 
