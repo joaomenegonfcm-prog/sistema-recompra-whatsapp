@@ -1,4 +1,5 @@
-import { Check, MessageCircle, Pause, ShoppingBag } from 'lucide-react';
+import { useId, useState } from 'react';
+import { Check, ChevronDown, MessageCircle, Pause, ShoppingBag } from 'lucide-react';
 import { Badge } from '../../components/UI/Badge';
 import { Button } from '../../components/UI/Button';
 import { Card } from '../../components/UI/Card';
@@ -27,6 +28,14 @@ export function ContactCard({
   onRegisterRepurchase,
   isProcessing = false,
 }: ContactCardProps) {
+  const [isMoreActionsOpen, setIsMoreActionsOpen] = useState(false);
+  const moreActionsId = useId();
+
+  function handlePauseClick() {
+    setIsMoreActionsOpen(false);
+    onPause(contact);
+  }
+
   return (
     <Card className="contact-card">
       <div className="contact-card-header">
@@ -63,7 +72,7 @@ export function ContactCard({
         </div>
       </dl>
 
-      <div className="contact-card-actions">
+      <div className="contact-card-actions" role="group" aria-label="Ações principais">
         <Button
           type="button"
           onClick={() => onOpenWhatsApp(contact)}
@@ -80,8 +89,11 @@ export function ContactCard({
           disabled={isProcessing || contact.next_attempt_number === null || contact.customer_opt_out}
         >
           <Check size={18} aria-hidden="true" />
-          Marcar como enviado
+          Confirmar envio
         </Button>
+      </div>
+
+      <div className="contact-card-secondary-actions">
         <Button
           type="button"
           variant="secondary"
@@ -91,11 +103,29 @@ export function ContactCard({
           <ShoppingBag size={18} aria-hidden="true" />
           Registrar recompra
         </Button>
-        <Button type="button" variant="ghost" onClick={() => onPause(contact)} disabled={isProcessing}>
-          <Pause size={18} aria-hidden="true" />
-          Pausar
+        <Button
+          type="button"
+          variant="ghost"
+          className="contact-more-actions-button"
+          aria-expanded={isMoreActionsOpen}
+          aria-controls={moreActionsId}
+          onClick={() => setIsMoreActionsOpen((isOpen) => !isOpen)}
+          disabled={isProcessing}
+        >
+          <ChevronDown size={18} aria-hidden="true" />
+          Mais ações
         </Button>
       </div>
+
+      {isMoreActionsOpen && (
+        <div id={moreActionsId} className="contact-more-actions-panel">
+          <Button type="button" variant="ghost" onClick={handlePauseClick} disabled={isProcessing}>
+            <Pause size={18} aria-hidden="true" />
+            Pausar contato
+          </Button>
+        </div>
+      )}
+
       {contact.customer_opt_out && (
         <p className="contact-opt-out-note">Cliente marcado como não contatar.</p>
       )}

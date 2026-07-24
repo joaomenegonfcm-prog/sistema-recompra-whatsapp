@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/UI/Button';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { Loading } from '../../components/UI/Loading';
+import { Modal } from '../../components/UI/Modal';
 import { buildWhatsAppLink, buildWhatsAppMessage } from '../../lib/whatsapp';
 import { ContactCard } from './ContactCard';
 import {
@@ -23,6 +24,7 @@ export function TodayContactsPage() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [processingPurchaseId, setProcessingPurchaseId] = useState<string | null>(null);
+  const [pauseContact, setPauseContact] = useState<TodayContact | null>(null);
 
   const loadData = useCallback(async (showLoading = true) => {
     if (showLoading) setLoading(true);
@@ -109,18 +111,30 @@ export function TodayContactsPage() {
     }
   }
 
-  async function handlePause(contact: TodayContact) {
-    if (!window.confirm('Deseja pausar este ciclo de recompra?')) return;
+  function openPauseModal(contact: TodayContact) {
+    setError(null);
+    setSuccessMessage(null);
+    setPauseContact(contact);
+  }
 
-    setProcessingPurchaseId(contact.purchase_id);
+  function closePauseModal() {
+    if (processingPurchaseId) return;
+    setPauseContact(null);
+  }
+
+  async function handlePause() {
+    if (!pauseContact || processingPurchaseId) return;
+
+    setProcessingPurchaseId(pauseContact.purchase_id);
     setError(null);
     setSuccessMessage(null);
 
     try {
-      await pausePurchase(contact.purchase_id);
+      await pausePurchase(pauseContact.purchase_id);
       const refreshed = await loadData(false);
       if (refreshed) {
         setSuccessMessage('Ciclo pausado com sucesso.');
+        setPauseContact(null);
       }
     } catch (caughtError) {
       if (import.meta.env.DEV) {
@@ -148,6 +162,10 @@ export function TodayContactsPage() {
           <p>Clientes que devem ser chamados hoje ou que estão atrasados.</p>
         </div>
       </div>
+
+      <p className="today-contact-instruction">
+        Abra a conversa no WhatsApp, envie a mensagem e depois volte ao sistema para registrar o envio.
+      </p>
 
       {successMessage && (
         <div className="success-message" role="status">
@@ -180,13 +198,50 @@ export function TodayContactsPage() {
               contact={contact}
               onOpenWhatsApp={handleOpenWhatsApp}
               onRegisterAttempt={(item) => void handleRegisterAttempt(item)}
-              onPause={(item) => void handlePause(item)}
+              onPause={openPauseModal}
               onRegisterRepurchase={handleRegisterRepurchase}
               isProcessing={processingPurchaseId === contact.purchase_id}
             />
           ))}
         </div>
       )}
+
+      <Modal
+        isOpen={pauseContact !== null}
+        title="Pausar contato"
+        onClose={closePauseModal}
+        preventClose={processingPurchaseId !== null}
+      >
+        {pauseContact && (
+          <div className="pause-contact-modal">
+            <p>
+              Confirme a pausa do ciclo de recompra de <strong>{pauseContact.customer_name}</strong>{' '}
+              para o produto <strong>{pauseContact.product}</strong>.
+            </p>
+            <p>
+              Este ciclo sai da fila de Contatos de Hoje até que seja retomado por uma regra ou ação
+              permitida pelo sistema.
+            </p>
+            <div className="pause-contact-modal-actions">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={closePauseModal}
+                disabled={processingPurchaseId !== null}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                onClick={() => void handlePause()}
+                disabled={processingPurchaseId !== null}
+              >
+                {processingPurchaseId === pauseContact.purchase_id ? 'Pausando...' : 'Confirmar pausa'}
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </section>
   );
 }
