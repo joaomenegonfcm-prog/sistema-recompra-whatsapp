@@ -167,46 +167,94 @@ export function CustomersPage() {
           description="Revise o nome ou telefone informado."
         />
       ) : (
-        <div className="table-container">
-          <table className="data-table customer-table">
-            <thead>
-              <tr>
-                <th>Cliente</th>
-                <th>Telefone</th>
-                <th>Total de compras</th>
-                <th>Ciclos ativos</th>
-                <th>Em acompanhamento</th>
-                <th>Recompras</th>
-                <th>Última compra</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredCustomers.map((customer) => (
-                <tr key={customer.id}>
-                  <td>
-                    <div className="customer-name-cell">
-                      <strong>{customer.name}</strong>
+        <>
+          <div className="table-container customers-responsive-table">
+            <table className="data-table customer-table">
+              <thead>
+                <tr>
+                  <th>Cliente</th>
+                  <th>Telefone</th>
+                  <th>Total de compras</th>
+                  <th>Ciclos ativos</th>
+                  <th>Em acompanhamento</th>
+                  <th>Recompras</th>
+                  <th>Última compra</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredCustomers.map((customer) => (
+                  <tr key={customer.id}>
+                    <td>
+                      <div className="customer-name-cell">
+                        <strong>{customer.name}</strong>
+                        {customer.opt_out && <Badge variant="opt_out">Não contatar</Badge>}
+                      </div>
+                    </td>
+                    <td className="table-nowrap">{formatPhone(customer.phone)}</td>
+                    <td>{getValidPurchases(customer).length}</td>
+                    <td>{countPurchasesByStatus(customer, 'active')}</td>
+                    <td>{countPurchasesByStatus(customer, 'in_followup')}</td>
+                    <td>{countValidRepurchases(customer.purchases)}</td>
+                    <td className="table-nowrap">{formatDate(getLastPurchaseDate(customer))}</td>
+                    <td>
+                      <Link className="table-action-link" to={`/clientes/${customer.id}`}>
+                        <History size={16} aria-hidden="true" />
+                        Ver histórico
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <ul className="customers-mobile-list" aria-label="Clientes">
+            {filteredCustomers.map((customer) => (
+              <li key={customer.id}>
+                <article className="mobile-data-card">
+                  <div className="mobile-data-card-header">
+                    <div className="mobile-data-card-title">
+                      <h2>{customer.name}</h2>
                       {customer.opt_out && <Badge variant="opt_out">Não contatar</Badge>}
                     </div>
-                  </td>
-                  <td className="table-nowrap">{formatPhone(customer.phone)}</td>
-                  <td>{getValidPurchases(customer).length}</td>
-                  <td>{countPurchasesByStatus(customer, 'active')}</td>
-                  <td>{countPurchasesByStatus(customer, 'in_followup')}</td>
-                  <td>{countValidRepurchases(customer.purchases)}</td>
-                  <td className="table-nowrap">{formatDate(getLastPurchaseDate(customer))}</td>
-                  <td>
+                    <p>{formatPhone(customer.phone)}</p>
+                  </div>
+
+                  <dl className="mobile-data-card-meta">
+                    <div>
+                      <dt>Total de compras</dt>
+                      <dd>{getValidPurchases(customer).length}</dd>
+                    </div>
+                    <div>
+                      <dt>Ciclos ativos</dt>
+                      <dd>{countPurchasesByStatus(customer, 'active')}</dd>
+                    </div>
+                    <div>
+                      <dt>Em acompanhamento</dt>
+                      <dd>{countPurchasesByStatus(customer, 'in_followup')}</dd>
+                    </div>
+                    <div>
+                      <dt>Recompras</dt>
+                      <dd>{countValidRepurchases(customer.purchases)}</dd>
+                    </div>
+                    <div className="mobile-data-card-meta-wide">
+                      <dt>Última compra</dt>
+                      <dd>{formatDate(getLastPurchaseDate(customer))}</dd>
+                    </div>
+                  </dl>
+
+                  <div className="mobile-data-card-actions">
                     <Link className="table-action-link" to={`/clientes/${customer.id}`}>
                       <History size={16} aria-hidden="true" />
                       Ver histórico
                     </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  </div>
+                </article>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </section>
   );

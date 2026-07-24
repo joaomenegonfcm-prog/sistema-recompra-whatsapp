@@ -1120,6 +1120,81 @@ p {
   margin-bottom: 0;
 }
 
+.customers-mobile-list,
+.purchases-mobile-list {
+  display: none;
+}
+
+.mobile-data-card {
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: var(--space-4);
+}
+
+.mobile-data-card-header {
+  display: grid;
+  gap: 6px;
+}
+
+.mobile-data-card-header p {
+  margin-bottom: 0;
+  overflow-wrap: anywhere;
+}
+
+.mobile-data-card-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.mobile-data-card-title h2 {
+  margin-bottom: 0;
+  overflow-wrap: anywhere;
+  font-size: 1.05rem;
+}
+
+.mobile-data-card-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  border-block: 1px solid #e6ebe7;
+  padding-block: 14px;
+}
+
+.mobile-data-card-meta div {
+  min-width: 0;
+}
+
+.mobile-data-card-meta dt {
+  margin-bottom: 3px;
+  color: #69756d;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.mobile-data-card-meta dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: #26352c;
+  font-size: 0.92rem;
+  font-weight: 650;
+}
+
+.mobile-data-card-meta-wide {
+  grid-column: 1 / -1;
+}
+
+.mobile-data-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .customers-toolbar {
   position: relative;
   width: min(460px, 100%);
@@ -1911,6 +1986,20 @@ th {
     grid-template-columns: 1fr;
   }
 
+  .customers-responsive-table,
+  .purchases-responsive-table {
+    display: none;
+  }
+
+  .customers-mobile-list,
+  .purchases-mobile-list {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
   .today-contacts-grid {
     grid-template-columns: 1fr;
   }
@@ -1970,6 +2059,19 @@ th {
   .contact-card-title {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .mobile-data-card-title {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .mobile-data-card-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .mobile-data-card-meta-wide {
+    grid-column: auto;
   }
 
   .contact-card-actions {

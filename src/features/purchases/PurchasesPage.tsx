@@ -114,44 +114,89 @@ export function PurchasesPage() {
           }
         />
       ) : (
-        <div className="table-container">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Cliente</th>
-                <th>Telefone</th>
-                <th>Produto</th>
-                <th>Data da compra</th>
-                <th>Data de recompra</th>
-                <th>Status</th>
-                <th>Observação</th>
-              </tr>
-            </thead>
-            <tbody>
-              {purchases.map((purchase) => (
-                <tr key={purchase.id}>
-                  <td>
-                    {purchase.customers ? (
-                      <Link className="table-link" to={`/clientes/${purchase.customers.id}`}>
-                        {purchase.customers.name}
-                      </Link>
-                    ) : '-'}
-                  </td>
-                  <td className="table-nowrap">{purchase.customers?.phone ?? '-'}</td>
-                  <td>{purchase.product}</td>
-                  <td className="table-nowrap">{formatDate(purchase.purchase_date)}</td>
-                  <td className="table-nowrap">{formatDate(purchase.reorder_date)}</td>
-                  <td>
-                    <Badge variant={purchase.status}>
-                      {formatPurchaseStatus(purchase.status)}
-                    </Badge>
-                  </td>
-                  <td className="table-observation">{purchase.observation || '-'}</td>
+        <>
+          <div className="table-container purchases-responsive-table">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Cliente</th>
+                  <th>Telefone</th>
+                  <th>Produto</th>
+                  <th>Data da compra</th>
+                  <th>Data de recompra</th>
+                  <th>Status</th>
+                  <th>Observação</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {purchases.map((purchase) => (
+                  <tr key={purchase.id}>
+                    <td>
+                      {purchase.customers ? (
+                        <Link className="table-link" to={`/clientes/${purchase.customers.id}`}>
+                          {purchase.customers.name}
+                        </Link>
+                      ) : '-'}
+                    </td>
+                    <td className="table-nowrap">{purchase.customers?.phone ?? '-'}</td>
+                    <td>{purchase.product}</td>
+                    <td className="table-nowrap">{formatDate(purchase.purchase_date)}</td>
+                    <td className="table-nowrap">{formatDate(purchase.reorder_date)}</td>
+                    <td>
+                      <Badge variant={purchase.status}>
+                        {formatPurchaseStatus(purchase.status)}
+                      </Badge>
+                    </td>
+                    <td className="table-observation">{purchase.observation || '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <ul className="purchases-mobile-list" aria-label="Compras">
+            {purchases.map((purchase) => (
+              <li key={purchase.id}>
+                <article className="mobile-data-card">
+                  <div className="mobile-data-card-header">
+                    <div className="mobile-data-card-title">
+                      <h2>{purchase.product}</h2>
+                      <Badge variant={purchase.status}>
+                        {formatPurchaseStatus(purchase.status)}
+                      </Badge>
+                    </div>
+                    <p>
+                      {purchase.customers ? (
+                        <Link className="table-link" to={`/clientes/${purchase.customers.id}`}>
+                          {purchase.customers.name}
+                        </Link>
+                      ) : '-'}
+                    </p>
+                  </div>
+
+                  <dl className="mobile-data-card-meta">
+                    <div>
+                      <dt>Telefone</dt>
+                      <dd>{purchase.customers?.phone ?? '-'}</dd>
+                    </div>
+                    <div>
+                      <dt>Data da compra</dt>
+                      <dd>{formatDate(purchase.purchase_date)}</dd>
+                    </div>
+                    <div>
+                      <dt>Data de recompra</dt>
+                      <dd>{formatDate(purchase.reorder_date)}</dd>
+                    </div>
+                    <div className="mobile-data-card-meta-wide">
+                      <dt>Observação</dt>
+                      <dd>{purchase.observation || '-'}</dd>
+                    </div>
+                  </dl>
+                </article>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </section>
   );
