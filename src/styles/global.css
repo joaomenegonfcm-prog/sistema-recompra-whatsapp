@@ -108,6 +108,10 @@ p {
   padding: 22px;
 }
 
+.sidebar-top {
+  display: block;
+}
+
 .sidebar-brand {
   display: flex;
   align-items: center;
@@ -136,6 +140,10 @@ p {
   font-size: 0.88rem;
 }
 
+.sidebar-menu-button {
+  display: none;
+}
+
 .sidebar-nav {
   display: grid;
   gap: 8px;
@@ -156,6 +164,7 @@ p {
 .sidebar-link-active {
   background: #e8f1eb;
   color: #173d2d;
+  font-weight: 800;
 }
 
 .content-shell {
@@ -226,9 +235,18 @@ p {
   gap: 24px;
 }
 
+.page-header > div:first-child {
+  min-width: 0;
+}
+
+.page-header p:last-child {
+  margin-bottom: 0;
+}
+
 .page-actions {
   display: flex;
   flex: 0 0 auto;
+  align-items: flex-start;
   gap: 10px;
 }
 
@@ -1707,21 +1725,49 @@ th {
     padding: 14px 18px;
   }
 
+  .sidebar-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
   .sidebar-brand {
-    margin-bottom: 12px;
+    min-width: 0;
+    margin-bottom: 0;
+  }
+
+  .sidebar-menu-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 40px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    color: #26352c;
+    padding: 0 var(--space-3);
+    font-weight: 800;
+  }
+
+  .sidebar-menu-button:hover {
+    background: #f8faf8;
+    color: var(--color-primary-hover);
   }
 
   .sidebar-nav {
-    display: flex;
+    display: none;
     gap: 6px;
-    overflow-x: auto;
-    padding-bottom: 3px;
-    scrollbar-width: thin;
+    margin-top: 12px;
+  }
+
+  .sidebar-nav-open {
+    display: grid;
   }
 
   .sidebar-link {
     min-height: 40px;
-    flex: 0 0 auto;
   }
 
   .modal-backdrop {
@@ -1751,6 +1797,10 @@ th {
     flex-direction: column;
   }
 
+  .page-actions {
+    width: 100%;
+  }
+
   .page-actions .button {
     width: 100%;
   }
@@ -1763,13 +1813,20 @@ th {
     grid-template-columns: 1fr;
   }
 
-  .customer-history-actions,
   .customer-history-header {
     align-items: stretch;
     flex-direction: column;
   }
 
   .customer-history-actions .button {
+    width: 100%;
+  }
+
+  .customer-history-details {
+    justify-items: stretch;
+  }
+
+  .customer-history-primary-action {
     width: 100%;
   }
 

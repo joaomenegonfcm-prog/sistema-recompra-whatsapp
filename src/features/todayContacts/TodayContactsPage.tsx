@@ -141,10 +141,12 @@ export function TodayContactsPage() {
 
   return (
     <section className="page-section">
-      <div className="page-title">
-        <p className="eyebrow">Fila do dia</p>
-        <h1>Contatos de Hoje</h1>
-        <p>Clientes que devem ser chamados hoje ou que estão atrasados.</p>
+      <div className="page-header">
+        <div>
+          <p className="eyebrow">Fila do dia</p>
+          <h1>Contatos de Hoje</h1>
+          <p>Clientes que devem ser chamados hoje ou que estão atrasados.</p>
+        </div>
       </div>
 
       {successMessage && (

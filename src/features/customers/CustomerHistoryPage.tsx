@@ -487,21 +487,6 @@ export function CustomerHistoryPage() {
           <ArrowLeft size={18} aria-hidden="true" />
           Voltar para clientes
         </Link>
-        {customer && !refreshing && (
-          <Link
-            className="button button-primary"
-            to={`/compras/nova?cliente=${encodeURIComponent(customer.name)}&telefone=${encodeURIComponent(customer.phone)}`}
-          >
-            <Plus size={18} aria-hidden="true" />
-            Registrar nova compra
-          </Link>
-        )}
-        {customer && refreshing && (
-          <span className="button button-primary button-disabled-link" aria-disabled="true">
-            <Plus size={18} aria-hidden="true" />
-            Registrar nova compra
-          </span>
-        )}
       </div>
 
       {successMessage && (
@@ -539,6 +524,23 @@ export function CustomerHistoryPage() {
               <p>{formatPhone(customer.phone)}</p>
             </div>
             <div className="customer-history-details">
+              {!refreshing ? (
+                <Link
+                  className="button button-primary customer-history-primary-action"
+                  to={`/compras/nova?cliente=${encodeURIComponent(customer.name)}&telefone=${encodeURIComponent(customer.phone)}`}
+                >
+                  <Plus size={18} aria-hidden="true" />
+                  Registrar nova compra
+                </Link>
+              ) : (
+                <span
+                  className="button button-primary button-disabled-link customer-history-primary-action"
+                  aria-disabled="true"
+                >
+                  <Plus size={18} aria-hidden="true" />
+                  Registrar nova compra
+                </span>
+              )}
               <dl>
                 <div><dt>Cadastro</dt><dd>{formatDateTime(customer.created_at)}</dd></div>
                 {customer.notes && <div><dt>Observações</dt><dd>{customer.notes}</dd></div>}
