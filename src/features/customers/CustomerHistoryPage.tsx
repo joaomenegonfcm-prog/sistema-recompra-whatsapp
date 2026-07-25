@@ -70,6 +70,7 @@ type StatusFormState = {
 const emptyCustomerForm: CustomerFormState = { name: '', phone: '' };
 const emptyPurchaseForm: PurchaseFormState = { product: '', reorderDays: '', observation: '' };
 const emptyStatusForm: StatusFormState = { newStatus: '', reason: '', attemptHandling: 'keep' };
+const HISTORY_PREVIEW_LIMIT = 3;
 
 function getBadgeVariant(status: string): BadgeVariant {
   return purchaseBadgeVariants.has(status as BadgeVariant) ? status as BadgeVariant : 'default';
@@ -150,6 +151,28 @@ function getErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
+function getVisibleAttempts(attempts: Purchase['contact_attempts'], expanded: boolean) {
+  if (expanded || attempts.length <= HISTORY_PREVIEW_LIMIT) {
+    return attempts;
+  }
+
+  return attempts.slice(-HISTORY_PREVIEW_LIMIT);
+}
+
+function getOrderedStatusHistory(history: PurchaseStatusHistory[]) {
+  return [...history].sort((first, second) => second.createdAt.localeCompare(first.createdAt));
+}
+
+function getVisibleStatusHistory(history: PurchaseStatusHistory[], expanded: boolean) {
+  const orderedHistory = getOrderedStatusHistory(history);
+
+  if (expanded || orderedHistory.length <= HISTORY_PREVIEW_LIMIT) {
+    return orderedHistory;
+  }
+
+  return orderedHistory.slice(0, HISTORY_PREVIEW_LIMIT);
+}
+
 export function CustomerHistoryPage() {
   const { id } = useParams();
   const hasCustomerRef = useRef(false);
@@ -170,6 +193,8 @@ export function CustomerHistoryPage() {
   const [purchaseForm, setPurchaseForm] = useState<PurchaseFormState>(emptyPurchaseForm);
   const [statusForm, setStatusForm] = useState<StatusFormState>(emptyStatusForm);
   const [optOutReason, setOptOutReason] = useState('');
+  const [expandedAttemptsByPurchaseId, setExpandedAttemptsByPurchaseId] = useState<Record<string, boolean>>({});
+  const [expandedStatusHistoryByPurchaseId, setExpandedStatusHistoryByPurchaseId] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     hasCustomerRef.current = customer !== null;
@@ -193,6 +218,8 @@ export function CustomerHistoryPage() {
         setModal(null);
         setModalError(null);
         setOptOutReason('');
+        setExpandedAttemptsByPurchaseId({});
+        setExpandedStatusHistoryByPurchaseId({});
       }
 
       try {
@@ -341,6 +368,20 @@ export function CustomerHistoryPage() {
     setModal({ type: 'optOut', optOut });
   }
 
+  function togglePurchaseAttempts(purchaseId: string) {
+    setExpandedAttemptsByPurchaseId((current) => ({
+      ...current,
+      [purchaseId]: !current[purchaseId],
+    }));
+  }
+
+  function togglePurchaseStatusHistory(purchaseId: string) {
+    setExpandedStatusHistoryByPurchaseId((current) => ({
+      ...current,
+      [purchaseId]: !current[purchaseId],
+    }));
+  }
+
   async function handleCustomerSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -452,7 +493,7 @@ export function CustomerHistoryPage() {
   async function handleOptOutSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!customer || !modal || modal.type !== 'optOut') return;
+    if (!customer || !modal || modal.type !== 'optOut' || saving) return;
 
     if (!optOutReason.trim()) {
       setModalError('Informe o motivo.');
@@ -543,7 +584,11 @@ export function CustomerHistoryPage() {
               )}
               <dl>
                 <div><dt>Cadastro</dt><dd>{formatDateTime(customer.created_at)}</dd></div>
-                {customer.notes && <div><dt>Observações</dt><dd>{customer.notes}</dd></div>}
+                {customer.notes && (
+                  <div className="customer-history-detail-wide">
+                    <dt>Observações</dt><dd>{customer.notes}</dd>
+                  </div>
+                )}
               </dl>
               <Button type="button" variant="secondary" onClick={openCustomerModal} disabled={refreshing}>
                 <Pencil size={16} aria-hidden="true" />
@@ -556,7 +601,7 @@ export function CustomerHistoryPage() {
                 disabled={refreshing}
               >
                 <Ban size={16} aria-hidden="true" />
-                {customer.opt_out ? 'Permitir contato' : 'Não contatar'}
+                {customer.opt_out ? 'Permitir contato novamente' : 'Marcar como não contatar'}
               </Button>
             </div>
           </header>
@@ -617,6 +662,13 @@ export function CustomerHistoryPage() {
               {purchases.map((purchase) => {
                 const validAttempts = purchase.contact_attempts.filter(isValidContactAttempt);
                 const purchaseHistory = statusHistory[purchase.id] ?? [];
+                const attemptsExpanded = expandedAttemptsByPurchaseId[purchase.id] ?? false;
+                const statusHistoryExpanded = expandedStatusHistoryByPurchaseId[purchase.id] ?? false;
+                const visibleAttempts = getVisibleAttempts(purchase.contact_attempts, attemptsExpanded);
+                const orderedPurchaseHistory = getOrderedStatusHistory(purchaseHistory);
+                const visibleStatusHistory = getVisibleStatusHistory(purchaseHistory, statusHistoryExpanded);
+                const attemptsPanelId = `purchase-attempts-${purchase.id}`;
+                const statusHistoryPanelId = `purchase-status-history-${purchase.id}`;
                 const statusOptions = getAllowedStatusOptions({
                   status: purchase.status,
                   validAttemptsCount: validAttempts.length,
@@ -675,68 +727,100 @@ export function CustomerHistoryPage() {
                     </dl>
 
                     <div className="attempts-list">
-                      <h3>Tentativas de contato</h3>
-                      {purchase.contact_attempts.length === 0 ? (
-                        <p>Nenhuma tentativa registrada para esta compra.</p>
-                      ) : purchase.contact_attempts.map((attempt) => {
-                        const voided = attempt.voided_at !== null;
-
-                        return (
-                          <article
-                            key={attempt.id}
-                            className={`attempt-item${voided ? ' attempt-item-voided' : ''}`}
+                      <div className="customer-history-subsection-header">
+                        <h3>Tentativas de contato</h3>
+                        {purchase.contact_attempts.length > HISTORY_PREVIEW_LIMIT && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            className="history-toggle-button"
+                            aria-expanded={attemptsExpanded}
+                            aria-controls={attemptsPanelId}
+                            onClick={() => togglePurchaseAttempts(purchase.id)}
                           >
-                            <div className="attempt-item-header">
-                              <strong>{attempt.attempt_number}ª tentativa</strong>
-                              <span className={`attempt-status attempt-status-${voided ? 'voided' : attempt.status}`}>
-                                {voided ? 'Anulada' : formatAttemptStatus(attempt.status)}
-                              </span>
-                            </div>
-                            <div className="attempt-item-meta">
-                              <span>{formatDateTime(attempt.attempt_date)}</span>
-                              <span>Canal: {attempt.channel}</span>
-                            </div>
-                            {voided && (
-                              <p className="attempt-voided-note">
-                                Anulada em {formatDateTime(attempt.voided_at)}.
-                                {attempt.voided_reason ? ` Motivo: ${attempt.voided_reason}` : ''}
-                              </p>
-                            )}
-                            <p className="message-preview">{attempt.message}</p>
-                          </article>
-                        );
-                      })}
+                            {attemptsExpanded ? 'Mostrar menos tentativas' : 'Mostrar todas as tentativas'}
+                          </Button>
+                        )}
+                      </div>
+                      <div id={attemptsPanelId} className="customer-history-collapsible-list">
+                        {purchase.contact_attempts.length === 0 ? (
+                          <p>Nenhuma tentativa registrada para esta compra.</p>
+                        ) : visibleAttempts.map((attempt) => {
+                          const voided = attempt.voided_at !== null;
+
+                          return (
+                            <article
+                              key={attempt.id}
+                              className={`attempt-item${voided ? ' attempt-item-voided' : ''}`}
+                            >
+                              <div className="attempt-item-header">
+                                <strong>{attempt.attempt_number}ª tentativa</strong>
+                                <span className={`attempt-status attempt-status-${voided ? 'voided' : attempt.status}`}>
+                                  {voided ? 'Anulada' : formatAttemptStatus(attempt.status)}
+                                </span>
+                              </div>
+                              <div className="attempt-item-meta">
+                                <span>{formatDateTime(attempt.attempt_date)}</span>
+                                <span>Canal: {attempt.channel}</span>
+                              </div>
+                              {voided && (
+                                <p className="attempt-voided-note">
+                                  Anulada em {formatDateTime(attempt.voided_at)}.
+                                  {attempt.voided_reason ? ` Motivo: ${attempt.voided_reason}` : ''}
+                                </p>
+                              )}
+                              <p className="message-preview">{attempt.message}</p>
+                            </article>
+                          );
+                        })}
+                      </div>
                     </div>
 
                     {!statusHistoryError && (
                       <div className="status-history-list">
-                        <h3>Alterações de status</h3>
-                        {purchaseHistory.length === 0 ? (
-                          <p>Nenhuma alteração manual registrada.</p>
-                        ) : purchaseHistory.map((item) => {
-                          const voidedAttempts = item.metadata?.voidedAttempts;
+                        <div className="customer-history-subsection-header">
+                          <h3>Alterações de status</h3>
+                          {orderedPurchaseHistory.length > HISTORY_PREVIEW_LIMIT && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              className="history-toggle-button"
+                              aria-expanded={statusHistoryExpanded}
+                              aria-controls={statusHistoryPanelId}
+                              onClick={() => togglePurchaseStatusHistory(purchase.id)}
+                            >
+                              {statusHistoryExpanded ? 'Mostrar menos histórico' : 'Ver todo o histórico'}
+                            </Button>
+                          )}
+                        </div>
+                        <div id={statusHistoryPanelId} className="customer-history-collapsible-list">
+                          {orderedPurchaseHistory.length === 0 ? (
+                            <p>Nenhuma alteração manual registrada.</p>
+                          ) : visibleStatusHistory.map((item) => {
+                            const voidedAttempts = item.metadata?.voidedAttempts;
 
-                          return (
-                            <article key={item.id} className="status-history-item">
-                              <div className="status-history-item-header">
-                                <span>
-                                  {formatPurchaseStatus(item.oldStatus)} → {formatPurchaseStatus(item.newStatus)}
-                                </span>
-                                <time>{formatDateTime(item.createdAt)}</time>
-                              </div>
-                              <p>Motivo: {item.reason}</p>
-                              {item.attemptHandling === 'void_attempts' &&
-                                typeof voidedAttempts === 'number' &&
-                                voidedAttempts > 0 && (
-                                  <small>Tentativas anuladas: {voidedAttempts}</small>
-                                )}
-                              {item.attemptHandling === 'void_attempts' &&
-                                (typeof voidedAttempts !== 'number' || voidedAttempts <= 0) && (
-                                  <small>Tentativas válidas anuladas.</small>
-                                )}
-                            </article>
-                          );
-                        })}
+                            return (
+                              <article key={item.id} className="status-history-item">
+                                <div className="status-history-item-header">
+                                  <span>
+                                    {formatPurchaseStatus(item.oldStatus)} → {formatPurchaseStatus(item.newStatus)}
+                                  </span>
+                                  <time>{formatDateTime(item.createdAt)}</time>
+                                </div>
+                                <p>Motivo: {item.reason}</p>
+                                {item.attemptHandling === 'void_attempts' &&
+                                  typeof voidedAttempts === 'number' &&
+                                  voidedAttempts > 0 && (
+                                    <small>Tentativas anuladas: {voidedAttempts}</small>
+                                  )}
+                                {item.attemptHandling === 'void_attempts' &&
+                                  (typeof voidedAttempts !== 'number' || voidedAttempts <= 0) && (
+                                    <small>Tentativas válidas anuladas.</small>
+                                  )}
+                              </article>
+                            );
+                          })}
+                        </div>
                       </div>
                     )}
                   </Card>
@@ -963,11 +1047,16 @@ export function CustomerHistoryPage() {
       >
         {modal?.type === 'optOut' && (
           <form className="modal-form" onSubmit={handleOptOutSubmit} noValidate>
-            <p className="form-help">
-              {modal.optOut
-                ? 'Este cliente deixará de aparecer em Contatos de Hoje e as ações de WhatsApp serão bloqueadas.'
-                : 'Este cliente poderá voltar a aparecer em Contatos de Hoje se houver compras vencidas.'}
-            </p>
+            <div className="opt-out-modal-copy">
+              <p>
+                Cliente: <strong>{customer?.name}</strong>
+              </p>
+              <p className="form-help">
+                {modal.optOut
+                  ? 'Este cliente será excluído de Contatos de Hoje e a abertura de WhatsApp pelo sistema será bloqueada. O histórico será preservado e a decisão pode ser revertida.'
+                  : 'Permitir contato novamente não força contato imediato. O histórico será preservado e o cliente só voltará a aparecer quando houver uma compra elegível.'}
+              </p>
+            </div>
             <label className="field" htmlFor="opt-out-reason">
               <span>Motivo</span>
               <textarea
@@ -979,14 +1068,22 @@ export function CustomerHistoryPage() {
               />
             </label>
             {modalError && <div className="form-message form-message-error" role="alert">{modalError}</div>}
-            <div className="form-actions">
+            <div className="form-actions opt-out-modal-actions">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={closeModal}
+                disabled={saving}
+              >
+                Cancelar
+              </Button>
               <Button type="submit" disabled={saving}>
                 <Save size={16} aria-hidden="true" />
                 {saving
                   ? 'Salvando...'
                   : modal.optOut
-                    ? 'Confirmar opt-out'
-                    : 'Remover opt-out'}
+                    ? 'Marcar como não contatar'
+                    : 'Permitir contato novamente'}
               </Button>
             </div>
           </form>

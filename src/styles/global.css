@@ -1266,9 +1266,14 @@ p {
 
 .customer-history-header dl {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   width: min(420px, 100%);
   margin: 0;
+}
+
+.customer-history-detail-wide {
+  grid-column: 1 / -1;
 }
 
 .customer-history-details {
@@ -1417,6 +1422,25 @@ p {
   font-size: 0.95rem;
 }
 
+.customer-history-subsection-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.history-toggle-button {
+  min-height: 34px;
+  padding-inline: 10px;
+  font-size: 0.82rem;
+}
+
+.customer-history-collapsible-list {
+  display: grid;
+  gap: 10px;
+}
+
+.customer-history-collapsible-list > p,
 .attempts-list > p {
   margin-bottom: 0;
   font-size: 0.9rem;
@@ -1542,6 +1566,19 @@ p {
   margin-bottom: 0;
   color: #405047;
   font-size: 0.88rem;
+}
+
+.opt-out-modal-copy {
+  display: grid;
+  gap: 10px;
+}
+
+.opt-out-modal-copy p {
+  margin-bottom: 0;
+}
+
+.opt-out-modal-actions {
+  gap: var(--space-3);
 }
 
 .modal-form {
@@ -1953,7 +1990,21 @@ th {
     justify-items: stretch;
   }
 
+  .customer-history-header dl,
+  .purchase-history-meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .customer-history-primary-action {
+    width: 100%;
+  }
+
+  .customer-history-subsection-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .history-toggle-button {
     width: 100%;
   }
 
@@ -2025,6 +2076,14 @@ th {
   }
 
   .form-actions .button {
+    width: 100%;
+  }
+
+  .opt-out-modal-actions {
+    flex-direction: column;
+  }
+
+  .opt-out-modal-actions .button {
     width: 100%;
   }
 
