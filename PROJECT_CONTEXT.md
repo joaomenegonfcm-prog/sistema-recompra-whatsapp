@@ -74,10 +74,13 @@ Arquivos/áreas importantes:
 
 O projeto possui `AGENTS.md` na raiz. Ele deve ser lido antes de qualquer mudança.
 
-Skills instaladas em `.agents/skills`:
+Skills em `.agents/skills` (Codex):
 
 - `supabase`
 - `supabase-postgres-best-practices`
+
+Skills em `.claude/skills` (Claude Code):
+
 - `ponytail`
 - `ponytail-review`
 

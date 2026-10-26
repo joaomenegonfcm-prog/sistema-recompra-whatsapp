@@ -83,6 +83,8 @@ Skills instaladas em `.agents/skills`:
 - `ponytail`;
 - `ponytail-review`.
 
+> Nota (26/10/2026): as skills `ponytail` e `ponytail-review` foram movidas para `.claude/skills/`, lida pelo Claude Code. O Codex não as vê mais.
+
 Ponytail deve permanecer em modo `lite`. Os modos `full` e `ultra` não estão autorizados.
 
 Commits de configuração já conhecidos e enviados anteriormente à `main`:

@@ -146,6 +146,8 @@ A melhoria do front-end deve ser incremental. Comece pelos componentes compartil
 
 Neste projeto, trate a Skill `ponytail` como modo `lite`.
 
+As skills `ponytail` e `ponytail-review` ficam em `.claude/skills/` e existem só no Claude Code; o Codex não as carrega.
+
 Ela pode:
 
 - apontar uma alternativa mais simples;
